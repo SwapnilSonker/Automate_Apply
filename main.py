@@ -65,7 +65,7 @@ try:
     keyword_box = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter keyword / designation / companies']"))
     )
-    search_keywords = "Customer Executive, BPO, Call Centre"
+    search_keywords = "Customer Executive"
     print("entering the keywords!!!")
     keyword_box.send_keys(search_keywords)
     print("keywords entered")
@@ -103,6 +103,53 @@ try:
     print("search button found")
     search_button.click()
     print("search button clicked , queries fetching....")
+    
+    #Working on the Applyjob part
+    job_container = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'styles_job-listing-container__OCfZC'))
+    )
+    print("job container found")
+
+    
+    job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']") ##just add //div 
+    print("job elements" , len(job_elements))
+    
+    
+    for index, job in enumerate(job_elements, 1):
+        # Extract visible text from the job element
+        job_text = job.text
+        print("job" , len(job_text))
+        
+        print("index =>" , index)
+        
+        job.click()
+        print("job is clicked")
+        
+        WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
+        
+        driver.switch_to.window(driver.window_handles[-1])
+        print("switched to a new tab")
+        
+        try:
+            print("Enter apply section")
+            apply_button = WebDriverWait(driver,10).until(
+                EC.presence_of_element_located((By.XPATH, "//div[@class='styles_jhc__apply-button-container__5Bqnb']//button[@id='apply-button'and text()='Apply']")) #if things go wrong check here first
+            )
+            time.sleep(1)
+            print("Apply button found")
+            apply_button.click()
+            print("Apply button clicked, Exiting window")
+        except Exception:
+            time.sleep(2)
+            print("No direct apply button is here!!!!")  
+        
+        driver.close()
+        print("Window exited moving to previous one")
+        driver.switch_to.window(driver.window_handles[0])  
+        print("In the main window...")    
+        
+        
+    
     
 except Exception as e:
     print("an error occured:",e)    
