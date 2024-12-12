@@ -13,7 +13,6 @@ EMAIL = os.getenv("NAUKRI_MAIL")
 PASSWORD = os.getenv("NAUKRI_PASSWORD")
 
 
-
 driver_path = 'C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
 
 service = Service(driver_path)
@@ -24,7 +23,7 @@ driver = webdriver.Chrome(service=service)
 driver.get("https://www.naukri.com/")
 
 driver.maximize_window()
-# time.sleep(1)
+time.sleep(1)
 
 try:
     login = WebDriverWait(driver, 10).until(
@@ -110,15 +109,14 @@ try:
     )
     print("job container found")
 
-    
-    job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']") ##just add //div 
+    job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']//div") #just add //div 
     print("job elements" , len(job_elements))
     
     
     for index, job in enumerate(job_elements, 1):
         # Extract visible text from the job element
         job_text = job.text
-        print("job" , len(job_text))
+        print("job ->" , len(job))
         
         print("index =>" , index)
         
