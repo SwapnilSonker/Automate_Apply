@@ -12,149 +12,137 @@ load_dotenv()
 EMAIL = os.getenv("NAUKRI_MAIL")
 PASSWORD = os.getenv("NAUKRI_PASSWORD")
 
-
 driver_path = 'C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
-
 service = Service(driver_path)
-
 driver = webdriver.Chrome(service=service)
 
-
 driver.get("https://www.naukri.com/")
-
 driver.maximize_window()
-time.sleep(1)
+time.sleep(3)
 
 try:
+    # Login process
     login = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//div[@class='nI-gNb-log-reg']//a"))
     )
     login.click()
-    
-    
-    
+
     email_input = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='form-row']//input[@type='text']"))
     )
     print("Email input field found.")
-    email_input.send_keys(os.getenv("NAUKRI_MAIL"))
-    
+    email_input.send_keys(EMAIL)
+
     password_input = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='form-row']//input[@type='password']"))
     )
     print("Password input field found.")
-    password_input.send_keys(os.getenv("NAUKRI_PASSWORD"))
-    
+    password_input.send_keys(PASSWORD)
+
     submit_button = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//div//button[@type='submit']"))
     )
-    
     submit_button.click()
-    
     print("Login Successful!!!")
-    
+
+    # Search process
     search_box = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//div[@class='nI-gNb-sb__main']"))
     )
-    print("found the searchbox")
+    print("Found the search box")
     search_box.click()
-    
-    print("Searchbox opened!!")
-    
+
     keyword_box = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter keyword / designation / companies']"))
     )
     search_keywords = "Customer Executive"
-    print("entering the keywords!!!")
     keyword_box.send_keys(search_keywords)
-    print("keywords entered")
-    
-    
+    print("Keywords entered")
+
     keyword_box.send_keys(Keys.TAB)
+
     experience_box = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='dropdownMainContainer focus']"))
     )
-    print("experience section found")
-    
     experience_box.click()
+    print("Experience section opened")
 
-    
-    print("experience section entered")
-    
-    options= WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, "//li[@index='0']"))
-    )   
+    options = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, "//li[@index='0']"))
+    )
     options.click()
-    print("exp entered")
-    
-    Location_box= WebDriverWait(driver, 10).until(
+    print("Experience level selected")
+
+    Location_box = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter location']"))
     )
-    Location_box.click()
-    Location_values = "Delhi , Noida, Gurugram"
-    print("entering location")
+    Location_values = "Delhi, Noida, Gurugram"
     Location_box.send_keys(Location_values)
-    print("location entered")
-    
+    print("Location entered")
+
     search_button = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@class='nI-gNb-sb__icon-wrapper']"))
     )
-    print("search button found")
     search_button.click()
-    print("search button clicked , queries fetching....")
-    
-    #Working on the Applyjob part
+    print("Search button clicked, fetching results...")
+
+    # Job application process
     job_container = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, 'styles_job-listing-container__OCfZC'))
     )
-    print("job container found")
+    print("Job container found")
 
-    job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']//div") #just add //div 
-    print("job elements" , len(job_elements))
-    
-    
+    job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']//div[@data-job-id]")
+    print(f"Found {len(job_elements)} job elements")
+
     for index, job in enumerate(job_elements, 1):
-        # Extract visible text from the job element
-        job_text = job.text
-        print("job ->" , len(job))
-        
-        print("index =>" , index)
-        
-        job.click()
-        print("job is clicked")
-        
-        WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
-        
-        driver.switch_to.window(driver.window_handles[-1])
-        print("switched to a new tab")
-        
         try:
-            print("Enter apply section")
-            apply_button = WebDriverWait(driver,10).until(
-                EC.presence_of_element_located((By.XPATH, "//div[@class='styles_jhc__apply-button-container__5Bqnb']//button[@id='apply-button'and text()='Apply']")) #if things go wrong check here first
-            )
-            time.sleep(1)
-            print("Apply button found")
-            apply_button.click()
-            print("Apply button clicked, Exiting window")
-        except Exception:
-            time.sleep(2)
-            print("No direct apply button is here!!!!")  
-        
-        driver.close()
-        print("Window exited moving to previous one")
-        driver.switch_to.window(driver.window_handles[0])  
-        print("In the main window...")    
-        
-        
-    
-    
+            # Scroll into view to ensure the job is interactable
+            driver.execute_script("arguments[0].scrollIntoView(true);", job)
+
+            # Extract visible text for debugging
+            job_text = job.text
+            print(f"Processing job {index}: {job_text[:50]}...")
+
+            job.click()
+            print("Job clicked")
+
+            # Wait for a new tab to open
+            WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
+
+            # Switch to the new tab
+            driver.switch_to.window(driver.window_handles[-1])
+            print("Switched to the new tab")
+
+            try:
+                print("Looking for the Apply button...")
+                apply_button = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='styles_jhc__apply-button-container__5Bqnb']//button[@id='apply-button' and text()='Apply']")
+                    )
+                )
+                time.sleep(5)
+                print("Apply button found")
+                time.sleep(2)
+                apply_button.click()
+                time.sleep(3)
+                print("Apply button clicked")
+            except Exception as e:
+                print("No direct Apply button found or other issue:", str(e))
+
+            # Close the current tab and return to the main window
+            driver.close()
+            print("Closed the new tab")
+            driver.switch_to.window(driver.window_handles[0])
+            print("Returned to the main window")
+
+        except Exception as e:
+            print(f"Error processing job {index}: {e}")
+            continue
+
 except Exception as e:
-    print("an error occured:",e)    
+    print("An error occurred:", e)
 finally:
-    print("press enter to close the browser")
+    print("Press Enter to close the browser")
     input()
     driver.quit()
-    
-    
-
