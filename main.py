@@ -21,6 +21,88 @@ driver.maximize_window()
 time.sleep(3)
 
 while True:
+    def next_page(driver):
+            try:
+                next_page = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, "//a[@class='styles_btn-secondary__2AsIP']"))
+                )
+                next_page.click()
+                print("Moving to the next page")
+                time.sleep(1)  # Allow time for the page to load
+            except Exception as e:
+                print(f"Error navigating to the next page: {e}")
+                raise
+    
+    def get_page_count(driver):
+        try:
+            pages_container = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@class='styles_pages__v1rAK']"))
+            )
+            print("Pages container located")
+
+            # Retrieve all the <a> tags within the container
+            pages = pages_container.find_elements(By.XPATH, ".//a")
+            return len(pages)
+        except Exception as e:
+            print("Error in page count" , e)
+            return 0   
+    
+    def fetch_job_elements(driver):
+        try:
+            job_container = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'styles_job-listing-container__OCfZC'))
+            )
+            print("Job container found")
+            job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']//div[@data-job-id]")
+            print(f"Found {len(job_elements)} job elements")
+            return job_elements
+        except Exception as e:
+            print(f"Error fetching job elements: {e}")
+            return []
+    
+    def process_jobs(driver, job_elements):
+        for index, job in enumerate(job_elements, 1):
+            try:
+                # Scroll into view to ensure the job is interactable
+                driver.execute_script("arguments[0].scrollIntoView(true);", job)
+
+                # Extract visible text for debugging
+                job_text = job.text
+                print(f"Processing job {index}: {job_text[:50]}...")
+
+                # Click the job
+                job.click()
+                print("Job clicked")
+
+                # Wait for a new tab to open
+                WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
+
+                # Switch to the new tab
+                driver.switch_to.window(driver.window_handles[-1])
+                print("Switched to the new tab")
+
+                try:
+                    print("Looking for the Apply button...")
+                    apply_button = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located(
+                            (By.XPATH, "//div[@class='styles_jhc__apply-button-container__5Bqnb']//button[@id='apply-button' and text()='Apply']")
+                        )
+                    )
+                    apply_button.click()
+                    print("Apply button clicked")
+                except Exception as e:
+                    print("No Apply button found:", str(e))
+
+                # Close the current tab and return to the main window
+                driver.close()
+                print("Closed the new tab")
+                driver.switch_to.window(driver.window_handles[0])
+                print("Returned to the main window")
+
+            except Exception as e:
+                print(f"Error processing job {index}: {e}")
+                continue
+        
     try:
         # Login process
         login = WebDriverWait(driver, 10).until(
@@ -57,7 +139,7 @@ while True:
         keyword_box = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter keyword / designation / companies']"))
         )
-        search_keywords = "Customer Executive"
+        search_keywords = "Software Engineer"
         keyword_box.send_keys(search_keywords)
         print("Keywords entered")
 
@@ -89,73 +171,36 @@ while True:
         print("Search button clicked, fetching results...")
 
         # Job application process
-        job_container = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'styles_job-listing-container__OCfZC'))
-        )
-        print("Job container found")
-
-        job_elements = job_container.find_elements(By.XPATH, "//div[@class='styles_jlc__main__VdwtF']//div[@data-job-id]")
-        print(f"Found {len(job_elements)} job elements")
-
-        for index, job in enumerate(job_elements, 1):
+        page_count = get_page_count(driver)
+        print("page count", page_count)
+        
+        current_page = 1
+        
+        while True:  # Loop through all pages
             try:
-                # Scroll into view to ensure the job is interactable
-                driver.execute_script("arguments[0].scrollIntoView(true);", job)
+                print(f"\nProcessing Page {current_page} of {page_count}")
 
-                # Extract visible text for debugging
-                job_text = job.text
-                print(f"Processing job {index}: {job_text[:50]}...")
+                # Fetch job elements on the current page
+                job_elements = fetch_job_elements(driver)
+                if not job_elements:
+                    print(f"No job elements found on page {current_page}. Skipping.")
+                else:
+                    # Process the jobs
+                    process_jobs(driver, job_elements)
 
-                job.click()
-                print("Job clicked")
+                # If we have processed the last page, exit the loop
+                if current_page >= page_count:
+                    print("There are no more pages to browse.")
+                    break
 
-                # Wait for a new tab to open
-                WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) > 1)
-
-                # Switch to the new tab
-                driver.switch_to.window(driver.window_handles[-1])
-                print("Switched to the new tab")
-
-                try:
-                    print("Looking for the Apply button...")
-                    apply_button = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located(
-                            (By.XPATH, "//div[@class='styles_jhc__apply-button-container__5Bqnb']//button[@id='apply-button' and text()='Apply']")
-                        )
-                    )
-                    time.sleep(5)
-                    print("Apply button found")
-                    time.sleep(2)
-                    apply_button.click()
-                    time.sleep(3)
-                    print("Apply button clicked")
-                except Exception as e:
-                    print("No direct Apply button found or other issue:", str(e))
-
-                # Close the current tab and return to the main window
-                driver.close()
-                print("Closed the new tab")
-                driver.switch_to.window(driver.window_handles[0])
-                print("Returned to the main window")
+                # Navigate to the next page
+                next_page(driver)
+                current_page += 1  # Increment page counter
 
             except Exception as e:
-                print(f"Error processing job {index}: {e}")
-                continue
-        try:
-            next_page = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[@class='styles_btn-secondary__2AsIP']")))
-            next_page.click()
-            print("moving to the next page")
-            time.sleep(5)
-            print("in the next page")
-            
-            # WebDriverWait(driver, 10).until(
-            #     EC.presence_of_all_elements_located((By.XPATH, "//div[@data-job-id]"))
-            # )
-            # print("applying to the job on the next page")
-        except Exception as e:
-            print("No more pages in the to process" , e) 
-            break   
+                print(f"Error in processing page {current_page}: {e}")
+                break  # Exit on unexpected error        
+       
                 
 
     except Exception as e:
