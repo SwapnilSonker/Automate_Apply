@@ -1,3 +1,5 @@
 /chromedriver-win64
 .env
 ps.py
+/.pytest_cache
+__pycache__
