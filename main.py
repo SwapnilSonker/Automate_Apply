@@ -7,10 +7,15 @@ from dotenv import load_dotenv
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import os
+import csv
+import re
 
 load_dotenv()
 EMAIL = os.getenv("NAUKRI_MAIL")
 PASSWORD = os.getenv("NAUKRI_PASSWORD")
+
+job_location = os.getenv("job_location")
+keyword = os.getenv("search_keyword")
 
 driver_path = 'C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
 service = Service(driver_path)
@@ -93,6 +98,30 @@ while True:
                 except Exception as e:
                     print("No Apply button found:", str(e))
 
+                try:
+                    details_div = driver.find_element(By.CLASS_NAME, "styles_JDC__dang-inner-html__h0K4t")
+                    details_text = details_div.text
+
+                    # Extract email and phone using regex
+                    email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', details_text)
+                    phone_match = re.search(r'\b\d{10}\b', details_text)
+
+                    # Extract values or set as "N/A" if not found
+                    email = email_match.group(0) if email_match else "N/A"
+                    phone = phone_match.group(0) if phone_match else "N/A"
+
+                    # Extract the company name (adjust the selector as needed)
+                    company_name = driver.find_element(By.XPATH, "//div[@class='styles_jd-header-comp-name__MvqAI']//a").text
+                    print(f"Company Name: {company_name}")
+                    job_title = driver.find_element(By.XPATH, "//h1[@class='styles_jd-header-title__rZwM1']").text
+                    print(f"Job Title: {job_title}")
+                    # Save to CSV
+                    writer.writerow([job_title, company_name, email, phone])
+                    print(f"Saved: {job_title} | {company_name} | Email: {email} | Phone: {phone}")
+
+                except Exception as e:
+                    print(f"Error extracting details for job {index}: {e}")
+
                 # Close the current tab and return to the main window
                 driver.close()
                 print("Closed the new tab")
@@ -102,7 +131,8 @@ while True:
             except Exception as e:
                 print(f"Error processing job {index}: {e}")
                 continue
-        
+   
+ 
     try:
         # Login process
         login = WebDriverWait(driver, 10).until(
@@ -139,7 +169,7 @@ while True:
         keyword_box = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter keyword / designation / companies']"))
         )
-        search_keywords = "Software Engineer"
+        search_keywords = keyword
         keyword_box.send_keys(search_keywords)
         print("Keywords entered")
 
@@ -160,7 +190,7 @@ while True:
         Location_box = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, "//div[@class='suggestor-box flex-row flex-wrap bottom ']//input[@type='text' and @placeholder='Enter location']"))
         )
-        Location_values = "Delhi, Noida, Gurugram"
+        Location_values = job_location
         Location_box.send_keys(Location_values)
         print("Location entered")
 
@@ -176,33 +206,33 @@ while True:
         
         current_page = 1
         
-        while True:  # Loop through all pages
-            try:
-                print(f"\nProcessing Page {current_page} of {page_count}")
+    
+        with open("jobs_data.csv", mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            # Write CSV header
+            writer.writerow(["Page", "Job Title", "Company Name", "Email", "Phone Number"])        
+            while True:  # Loop through all pages
+                try:
+                    print(f"\nProcessing Page {current_page} of {page_count}")
 
-                # Fetch job elements on the current page
-                job_elements = fetch_job_elements(driver)
-                if not job_elements:
-                    print(f"No job elements found on page {current_page}. Skipping.")
-                else:
-                    # Process the jobs
-                    process_jobs(driver, job_elements)
+                    # Fetch job elements on the current page
+                    job_elements = fetch_job_elements(driver)
+                    if not job_elements:
+                        print(f"No job elements found on page {current_page}. Skipping.")
+                    else:
+                        # Process the jobs
+                        process_jobs(driver, job_elements)
 
-                # If we have processed the last page, exit the loop
-                if current_page >= page_count:
-                    print("There are no more pages to browse.")
-                    break
+                    if current_page >= page_count:
+                        print("There are no more pages to browse.")
+                        break
 
-                # Navigate to the next page
-                next_page(driver)
-                current_page += 1  # Increment page counter
-
-            except Exception as e:
-                print(f"Error in processing page {current_page}: {e}")
-                break  # Exit on unexpected error        
-       
-                
-
+                    # Navigate to the next page
+                    next_page(driver)
+                    current_page += 1  # Increment page counter
+                except Exception as e:
+                    print(f"Error in processing page {current_page}: {e}")
+                    break  # Exit on unexpected error        
     except Exception as e:
         print("An error occurred:", e)
     finally:

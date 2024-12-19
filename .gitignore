@@ -1,5 +1,11 @@
 /chromedriver-win64
 .env
-ps.py
-/.pytest_cache
+
+
+#these files are of playwright
+/.pytest_cache 
 __pycache__
+
+#another test file
+linkedin.py
+ps.py
