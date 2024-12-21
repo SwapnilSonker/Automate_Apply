@@ -1,3 +1,7 @@
 playwright
 selenium
 python-dotenv
+
+# these are for validation of the data that is used or received 
+pydantic
+fastapi
