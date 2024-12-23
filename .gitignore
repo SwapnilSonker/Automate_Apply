@@ -11,7 +11,7 @@ linkedin.py
 ps.py
 
 #frontend -- will be deployed when build completely
-/frontend
+# /frontend
 
 #for custom test using jupyter notebook
 /customs/try.ipynb
