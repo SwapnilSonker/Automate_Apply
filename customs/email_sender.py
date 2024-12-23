@@ -70,41 +70,74 @@ class Email_Validation(BaseModel):
 
 
 
-def send_email(self, your_email , to_email, password, body, subject):
-    self.your_email = your_email
-    self.to_email = to_email
-    self.password = password
-    self.subject = subject
-    self.body = body
+def send_email( your_email , to_email, password, body, subject):
+    # self.your_email = your_email
+    # self.to_email = to_email
+    # self.password = password
+    # self.subject = subject
+    # self.body = body
     
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login(self.your_email , self.password)
-        server.sendmail(self.your_email, self.to_email,self.subject, self.body)
+        server.login(your_email , password)
+        server.sendmail(your_email, to_email,subject, body)
+
+# here in the csv there is an error to be fixed that is the column contents are shifted to the right that's why there are different names.
 
 def send_email_from_csv(sender_email, sender_password,csv_file):
-    data = pd.read_csv(csv_file)
+    try:
+        data = pd.read_csv(csv_file)
+    except FileNotFoundError:
+        print(f"Error: The file '{csv_file}' was not found.")
+        return
     
     for _, row in data.iterrows():
         
+        # here ['Company Name'] refers to the email address
+        if row['Company Name'] == "N/A" or pd.isna(row['Company Name']):
+            # print(f"Error: Email address not found for {row['Company Name']}.")
+            continue
+        
+        # here ['Job Title'] refers to the company name
+        if pd.isna(row['Job Title']):
+        #    print(f"Skipping row due to missing job title : {row.to_dict()}")
+           continue
         try:
             Email = Email_Validation(
                 your_email = sender_email,
-                to_email = row['Email'],
+                to_email = row['Company Name'],
                 password = sender_password,
-                company_name= row['Company Name']
+                company_name= row['Job Title'] if row['Company Name'] != "N/A" else "Unknown"
             )
             
-            job_title = row['Job Title'].strip()
             
-            print("job_title" , job_title)
-            print("sender_email" , Email.your_email)
-            print("receiver email", Email.to_email)
+            # herer ['Page'] refers to the job title 
+            job_title = row['Page'].strip()
+        
+            
             # subject to be added on the basis of job title
             # subject =  generate_subject_and_body(job_title, "subject")
+            # print("subject ->", subject)
             
             # body to be added on the basis of job title
             # body = generate_subject_and_body(job_title, "body")
+            # print("body ->", body)
+            
+            if not pd.isna(row['Company Name']) or row['Company Name'] != "N/A" or not pd.isna(row['Job Title']):
+                
+                print("job_title" , job_title)
+                print("sender_email" , Email.your_email)
+                print("receiver email", Email.to_email)
+                
+                subject =  generate_subject_and_body(job_title, "subject")
+                print("subject ->", subject)
+                
+                body = generate_subject_and_body(job_title, "body")
+                print("body ->", body)
+                
+                # send_email(Email.your_email, Email.to_email, Email.password, body, subject)
+                
+                
             
             # send_email(Email.your_email, Email.to_email, Email.password, body, subject)
             # for subject & body use huggingface model to generate subject 
