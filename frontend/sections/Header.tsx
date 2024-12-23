@@ -3,7 +3,7 @@ import React from 'react';
 
 const Header = () => {
     return (
-        // <header className="flex justify-center items-center p-5 ">
+
         <div>
         <nav>
           <ul className="flex  justify-evenly ">
@@ -31,7 +31,7 @@ const Header = () => {
           </ul>
         </nav>
         </div>
-      // </header>
+
     );
 };
 
