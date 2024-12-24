@@ -6,7 +6,7 @@ const Header = () => {
 
         <div>
         <nav>
-          <ul className="flex  justify-evenly ">
+          <ul className='flex justify-evenly'>
             <li>
               <Link href="#home" 
               className="text-white hover:bg-white/20 hover:text-blue-700 px-4 py-2 rounded-lg transition duration-300 ease-in-out">
