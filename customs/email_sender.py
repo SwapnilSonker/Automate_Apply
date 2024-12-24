@@ -1,3 +1,5 @@
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import pandas as pd
 import smtplib
 from pydantic import BaseModel , EmailStr
@@ -6,10 +8,8 @@ from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_community.llms.huggingface_hub import HuggingFaceHub
-from langchain_huggingface import HuggingFaceEndpoint
 from langchain.memory import ConversationBufferMemory
 from typing import Literal
-from langchain.schema.runnable import RunnableSequence
 from pydantic_core import ValidationError
 
 
@@ -28,8 +28,8 @@ def generate_subject_and_body(job_title:str, prompt_type:Literal['subject', 'bod
 
     I am writing to express my interest in the Frontend Engineer position at your company. With expertise in skills and measures required in this domain, I am confident that my skills will be a valuable asset to your team. I am particularly drawn to your company's commitment to innovation, and I would love the opportunity to contribute to your dynamic team.
 
-    Sincerely,
-    [Your Name]"""
+    Thank You
+    """
     
     
     if prompt_type == "subject":
@@ -71,19 +71,26 @@ class Email_Validation(BaseModel):
 
 
 def send_email( your_email , to_email, password, body, subject):
-    # self.your_email = your_email
-    # self.to_email = to_email
-    # self.password = password
-    # self.subject = subject
-    # self.body = body
     
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(your_email , password)
-        server.sendmail(your_email, to_email,subject, body)
+    try:
+        msg = MIMEMultipart()
+        msg["From"] = your_email
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        
+        msg.attach(MIMEText(body, 'plain'))
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(your_email , password)
+            server.sendmail(your_email, to_email, msg.as_string())
+            
+        print("Email sent successfully")    
+    except Exception as e:
+        print(f"Error: {e}")
+                
 
 # here in the csv there is an error to be fixed that is the column contents are shifted to the right that's why there are different names.
-
 def send_email_from_csv(sender_email, sender_password,csv_file):
     try:
         data = pd.read_csv(csv_file)
@@ -115,37 +122,23 @@ def send_email_from_csv(sender_email, sender_password,csv_file):
             job_title = row['Page'].strip()
         
             
-            # subject to be added on the basis of job title
-            # subject =  generate_subject_and_body(job_title, "subject")
-            # print("subject ->", subject)
-            
-            # body to be added on the basis of job title
-            # body = generate_subject_and_body(job_title, "body")
-            # print("body ->", body)
-            
             if not pd.isna(row['Company Name']) or row['Company Name'] != "N/A" or not pd.isna(row['Job Title']):
                 
-                print("job_title" , job_title)
-                print("sender_email" , Email.your_email)
-                print("receiver email", Email.to_email)
+                print("job_title" , type(job_title))
+                print("sender_email" , type(Email.your_email))
+                print("receiver email", type(Email.to_email))
                 
                 subject =  generate_subject_and_body(job_title, "subject")
-                print("subject ->", subject)
+                print("subject ->", type(subject))
                 
                 body = generate_subject_and_body(job_title, "body")
-                print("body ->", body)
+                print("body ->", type(body))
                 
-                # send_email(Email.your_email, Email.to_email, Email.password, body, subject)
-                
-                
-            
-            # send_email(Email.your_email, Email.to_email, Email.password, body, subject)
-            # for subject & body use huggingface model to generate subject 
+                send_email(Email.your_email, Email.to_email, Email.password, body, subject)
             
         except ValidationError as e:
             print(f"Validation Error: {e}")    
         except Exception as e:
             print(e)    
      
-if __name__ == "__main__":
-    send_email_from_csv("swapnilsonker04@gmail.com", "Swapnil@0406", "jobs_data.csv")     
+   

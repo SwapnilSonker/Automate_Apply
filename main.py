@@ -10,9 +10,13 @@ import os
 import csv
 import re
 
+from customs.email_sender import send_email_from_csv
+
 load_dotenv()
 EMAIL = os.getenv("NAUKRI_MAIL")
 PASSWORD = os.getenv("NAUKRI_PASSWORD")
+
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 job_location = os.getenv("job_location")
 keyword = os.getenv("search_keyword")
@@ -232,10 +236,11 @@ while True:
                     current_page += 1  # Increment page counter
                 except Exception as e:
                     print(f"Error in processing page {current_page}: {e}")
-                    break  # Exit on unexpected error        
+                    break  # Exit on unexpected error                       
     except Exception as e:
         print("An error occurred:", e)
     finally:
+        send_email_from_csv(EMAIL, EMAIL_PASSWORD, "jobs_data.csv")
         print("Press Enter to close the browser")
         input()
         driver.quit()
