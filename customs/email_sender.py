@@ -1,3 +1,5 @@
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pandas as pd
@@ -11,6 +13,7 @@ from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain.memory import ConversationBufferMemory
 from typing import Literal
 from pydantic_core import ValidationError
+from email_prompt import email_prompt
 
 
 
@@ -70,7 +73,7 @@ class Email_Validation(BaseModel):
 
 
 
-def send_email( your_email , to_email, password, body, subject):
+def send_email(your_email , to_email, password, body, subject, resume_pdf):
     
     try:
         msg = MIMEMultipart()
@@ -79,6 +82,25 @@ def send_email( your_email , to_email, password, body, subject):
         msg["Subject"] = subject
         
         msg.attach(MIMEText(body, 'plain'))
+        
+        if resume_pdf:
+            try:
+                with open(resume_pdf, "rb") as attachment:
+                    part = MIMEBase("application", "pdf")
+                    part.set_payload(attachment.read())
+                # Encode the file in base64
+                encoders.encode_base64(part)
+
+                # Add the header with the PDF file name
+                part.add_header(
+                    "Content-Disposition",
+                    f"attachment; filename={resume_pdf.split('/')[-1]}"
+                )
+
+                # Attach the file to the email
+                msg.attach(part)
+            except Exception as e:
+                print(f"Error attaching the PDF file: {e}")
 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
@@ -90,7 +112,6 @@ def send_email( your_email , to_email, password, body, subject):
         print(f"Error: {e}")
                 
 
-# here in the csv there is an error to be fixed that is the column contents are shifted to the right that's why there are different names.
 def send_email_from_csv(sender_email, sender_password,csv_file):
     try:
         data = pd.read_csv(csv_file)
@@ -100,45 +121,47 @@ def send_email_from_csv(sender_email, sender_password,csv_file):
     
     for _, row in data.iterrows():
         
-        # here ['Company Name'] refers to the email address
-        if row['Company Name'] == "N/A" or pd.isna(row['Company Name']):
+        
+        if row['Email'] == "N/A" or pd.isna(row['Email']):
             # print(f"Error: Email address not found for {row['Company Name']}.")
             continue
         
-        # here ['Job Title'] refers to the company name
-        if pd.isna(row['Job Title']):
+        
+        if pd.isna(row['Company Name']):
         #    print(f"Skipping row due to missing job title : {row.to_dict()}")
            continue
         try:
             Email = Email_Validation(
                 your_email = sender_email,
-                to_email = row['Company Name'],
+                to_email = row['Email'],
                 password = sender_password,
-                company_name= row['Job Title'] if row['Company Name'] != "N/A" else "Unknown"
+                company_name= row['Company Name'] if row['Email'] != "N/A" else "Unknown"
             )
             
             
-            # herer ['Page'] refers to the job title 
-            job_title = row['Page'].strip()
+            
+            job_title = row['Job Title'].strip()
         
             
-            if not pd.isna(row['Company Name']) or row['Company Name'] != "N/A" or not pd.isna(row['Job Title']):
+            if not pd.isna(row['Email']) or row['Email'] != "N/A" or not pd.isna(row['Company Name']):
                 
-                print("job_title" , type(job_title))
-                print("sender_email" , type(Email.your_email))
-                print("receiver email", type(Email.to_email))
+                # print("job_title" , type(job_title))
+                # print("sender_email" , type(Email.your_email))
+                # print("receiver email", type(Email.to_email))
                 
                 subject =  generate_subject_and_body(job_title, "subject")
-                print("subject ->", type(subject))
+                # print("subject ->", type(subject))
                 
                 body = generate_subject_and_body(job_title, "body")
-                print("body ->", type(body))
+                # print("body ->", body)
                 
-                send_email(Email.your_email, Email.to_email, Email.password, body, subject)
+                send_email(Email.your_email, Email.to_email, Email.password, body, subject, "sem 2 res.pdf")
             
         except ValidationError as e:
             print(f"Validation Error: {e}")    
         except Exception as e:
             print(e)    
      
-   
+# if __name__ == "__main__":
+#     send_email_from_csv("swapnilsonker04@gmail.com", "hnuu mngw keqt pnqm", "jobs_data.csv")
+#     send_email("swapnilsonker04@gmail.com", "swapnilsonkarcse2019@bbdu.ac.in", "hnuu mngw keqt pnqm", "body", "subject","sem 2 res.pdf" )

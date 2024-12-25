@@ -214,7 +214,7 @@ while True:
         with open("jobs_data.csv", mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             # Write CSV header
-            writer.writerow(["Page", "Job Title", "Company Name", "Email", "Phone Number"])        
+            writer.writerow(["Job Title", "Company Name", "Email", "Phone Number"])        
             while True:  # Loop through all pages
                 try:
                     print(f"\nProcessing Page {current_page} of {page_count}")
