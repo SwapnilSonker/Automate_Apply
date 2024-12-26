@@ -29,6 +29,13 @@ driver.get("https://www.naukri.com/")
 driver.maximize_window()
 time.sleep(3)
 
+start_time = time.time()
+
+apply_count = 0 # counter for the number of applies button clicked
+
+time_limit = 60 # setting the time limit of 1 minute
+
+
 while True:
     def next_page(driver):
             try:
@@ -69,7 +76,7 @@ while True:
             print(f"Error fetching job elements: {e}")
             return []
     
-    def process_jobs(driver, job_elements):
+    def process_jobs(driver, job_elements, apply_count):
         for index, job in enumerate(job_elements, 1):
             try:
                 # Scroll into view to ensure the job is interactable
@@ -99,6 +106,8 @@ while True:
                     )
                     apply_button.click()
                     print("Apply button clicked")
+                    apply_count += 1
+                    
                 except Exception as e:
                     print("No Apply button found:", str(e))
 
@@ -135,6 +144,8 @@ while True:
             except Exception as e:
                 print(f"Error processing job {index}: {e}")
                 continue
+            
+        return apply_count    
    
  
     try:
@@ -216,6 +227,13 @@ while True:
             # Write CSV header
             writer.writerow(["Job Title", "Company Name", "Email", "Phone Number"])        
             while True:  # Loop through all pages
+                
+                elapsedtime = time.time() - start_time
+                if elapsedtime > time_limit:
+                    print(f"Time Limit of {time_limit} is reached")
+                    print(f"Total number of job applied to: {apply_count}")
+                    break
+                
                 try:
                     print(f"\nProcessing Page {current_page} of {page_count}")
 
@@ -225,7 +243,7 @@ while True:
                         print(f"No job elements found on page {current_page}. Skipping.")
                     else:
                         # Process the jobs
-                        process_jobs(driver, job_elements)
+                        apply_count = process_jobs(driver, job_elements, apply_count)
 
                     if current_page >= page_count:
                         print("There are no more pages to browse.")
@@ -240,7 +258,7 @@ while True:
     except Exception as e:
         print("An error occurred:", e)
     finally:
-        send_email_from_csv(EMAIL, EMAIL_PASSWORD, "jobs_data.csv")
+        # send_email_from_csv(EMAIL, EMAIL_PASSWORD, "jobs_data.csv")
         print("Press Enter to close the browser")
         input()
         driver.quit()

@@ -13,7 +13,7 @@ from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain.memory import ConversationBufferMemory
 from typing import Literal
 from pydantic_core import ValidationError
-from email_prompt import email_prompt
+# from email_prompt import email_prompt
 
 
 
