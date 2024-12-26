@@ -17,11 +17,60 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [apiResponse, setApiResponse] = useState<Record<string, string> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+
+  const parseEnvInput = (input: string) => {
+    const envObject: Record<string, string> = {};
+  
+    // Split input by lines, trim spaces, and ignore empty lines
+    const lines = input.split('\n')
+      .map(line => line.trim())         // Trim spaces around each line
+      .filter(line => line.length > 0); // Remove empty lines
+  
+    // Regex to match key-value pairs, either : or = as separator
+    const regex = /^([A-Za-z_][A-Za-z0-9_]*)\s*[:=]\s*"(.*?)"$/;
+  
+    console.log("Processing input: ", lines);
+  
+    // Process each line
+    lines.forEach((line, index) => {
+      // Remove trailing comma if it exists
+      const lineWithoutComma = line.replace(/,\s*$/, '');
+  
+      console.log(`Processing line ${index + 1}:`, lineWithoutComma); // Log each line to check
+  
+      const match = lineWithoutComma.match(regex);
+  
+      if (match) {
+        const [, key, value] = match; // Destructure to get key and value
+        console.log(`Matched key: ${key}, value: ${value}`); // Log matched key-value pair
+        envObject[key] = value; // Add to the envObject
+      } else {
+        console.warn(`Line ${index + 1} did not match regex:`, lineWithoutComma); // Log unmatched lines
+      }
+    });
+  
+    return envObject;
+  };
+
+
+
   const handleApiCall = async () => {
     setIsLoading(true);
+    console.log("inner input" , envInput)
+    const env = parseEnvInput(envInput);
+    console.log("env input", env);
+    const stringified = JSON.stringify(env)
+    console.log("string" , stringified)
     try {
       // Simulating API call with timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // const response = await fetch("http://127.0.0.1:5000/start", {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body : JSON.stringify({})
+      // })
+      // await new Promise(resolve => setTimeout(resolve, 1500));
       const jsonData = parseEnvToJson(envInput);
       setApiResponse(jsonData);
     } catch (error) {
@@ -37,6 +86,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     downloadCsv(csvContent, 'environment-variables.csv');
   };
 
+  console.log("input", envInput);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
