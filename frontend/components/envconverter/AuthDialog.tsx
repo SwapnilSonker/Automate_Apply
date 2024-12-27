@@ -63,18 +63,28 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     console.log("string" , stringified)
     try {
       // Simulating API call with timeout
-      // const response = await fetch("http://127.0.0.1:5000/start", {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body : JSON.stringify({})
-      // })
-      // await new Promise(resolve => setTimeout(resolve, 1500));
-      const jsonData = parseEnvToJson(envInput);
-      setApiResponse(jsonData);
+      const response = await fetch("http://127.0.0.1:5000/start", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body : JSON.stringify(env)
+      });
+      
+      if(response.ok){
+        const jsonData = await response.json();
+
+        setApiResponse(jsonData)
+      }
+      else{
+        console.log("API call failed" , response.statusText);
+        setApiResponse({error: "API call failed", details: response.statusText});
+      }
+
+
     } catch (error) {
       console.error('API call failed:', error);
+      // setApiResponse({error: 'Network error', details: error.message})
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +96,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     downloadCsv(csvContent, 'environment-variables.csv');
   };
 
-  console.log("input", envInput);
+  console.log("api response", apiResponse);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
