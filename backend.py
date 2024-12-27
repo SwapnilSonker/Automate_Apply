@@ -277,7 +277,7 @@ def job_application():
         finally:
             # send_email_from_csv(EMAIL, EMAIL_PASSWORD, "jobs_data.csv")
             print("Press Enter to close the browser")
-            input()
+            # input()
             driver.quit()
             
         return jsonify({"message": "Job application process completed", "applied_jobs": apply_count})  
