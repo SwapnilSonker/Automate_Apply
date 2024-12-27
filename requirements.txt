@@ -3,7 +3,7 @@ selenium
 flask
 flask-cors
 python-dotenv
-
+gunicorn
 # these are for validation of the data that is used or received 
 pydantic
 fastapi
