@@ -111,7 +111,7 @@ multiprocess==0.70.17
 mypy-extensions==1.0.0
 nest-asyncio==1.6.0
 networkx==3.2.1
-numpy==1.21.6  # Adjusted for Python 3.9
+numpy==1.24.6  # Adjusted for Python 3.9
 oauth2client==4.1.3
 oauthlib==3.2.2
 ollama==0.4.4
