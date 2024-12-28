@@ -10,7 +10,7 @@ import os
 import csv
 import re
 from flask import Flask, request , jsonify
-from customs.email_sender import send_email_from_csv
+# from customs.email_sender import send_email_from_csv
 from flask_cors import CORS
 
 # load_dotenv()
