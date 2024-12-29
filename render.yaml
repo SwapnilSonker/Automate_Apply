@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: apply
+    env: python
+    buildCommand: ./render-build.sh
+    startCommand: gunicorn backend:app
+    plan: free

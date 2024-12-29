@@ -6,9 +6,7 @@
 /.pytest_cache 
 __pycache__
 
-#another test file
-linkedin.py
-ps.py
+
 
 #frontend -- will be deployed when build completely
 # /frontend
