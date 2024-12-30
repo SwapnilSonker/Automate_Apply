@@ -63,23 +63,23 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     console.log("string" , stringified)
     try {
       // Simulating API call with timeout
-      const response = await fetch("http://127.0.0.1:5000/start", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body : JSON.stringify(env)
-      });
+      // const response = await fetch("http://127.0.0.1:5000/start", {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body : JSON.stringify(env)
+      // });
       
-      if(response.ok){
-        const jsonData = await response.json();
+      // if(response.ok){
+      //   const jsonData = await response.json();
 
-        setApiResponse(jsonData)
-      }
-      else{
-        console.log("API call failed" , response.statusText);
-        setApiResponse({error: "API call failed", details: response.statusText});
-      }
+      //   setApiResponse(jsonData)
+      // }
+      // else{
+      //   console.log("API call failed" , response.statusText);
+      //   setApiResponse({error: "API call failed", details: response.statusText});
+      // }
 
 
     } catch (error) {
@@ -96,7 +96,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     downloadCsv(csvContent, 'environment-variables.csv');
   };
 
-  console.log("api response", apiResponse);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -116,15 +116,20 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
               {isLoading ? "Processing..." : "Fire Apply"}
             </Button>
             {apiResponse && (
-              <Button 
-                className="flex-1"
+                <>
+                <div className="flex-1">
+                {/* <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(apiResponse, null, 2)}</pre> */}
+                <Button
+                className="mt-2 w-full"
                 onClick={handleDownloadCsv}
                 variant="secondary"
-              >
+                >
                 <Download className="mr-2 h-4 w-4" />
-                Download CSV
-              </Button>
-            )}
+                {JSON.stringify(apiResponse["applied_jobs"], null, 2)}
+                </Button>
+                </div>
+                </>
+              )}
           </div>
         </div>
       </DialogContent>

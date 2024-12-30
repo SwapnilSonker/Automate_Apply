@@ -10,6 +10,7 @@ import os
 import csv
 import re
 from flask import Flask, request , jsonify
+from selenium.webdriver.chrome.options import Options
 # from customs.email_sender import send_email_from_csv
 from flask_cors import CORS
 
@@ -37,9 +38,24 @@ def job_application():
     job_location = data.get("job_location")
     keyword = data.get("search_keyword")
     
-    driver_path = 'C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
+    # driver_path = 'C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
+    # Detect environment
+    is_server = os.getenv("RENDER")  # Render sets specific environment variables
+
+    # Set driver path based on environment
+    if is_server:
+        driver_path = "/usr/local/bin/chromedriver"  # Linux path for Render
+    else:
+        driver_path = "C:/Users/91639/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe"  # Local Windows path
+
+    # Configure Chrome options
+    options = Options()
+    options.add_argument("--headless")  # Headless for server
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     service = Service(driver_path)
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome(service=service, Options=options)
 
     driver.get("https://www.naukri.com/")
     driver.maximize_window()
